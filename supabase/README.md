@@ -1,8 +1,12 @@
-# Supabase Setup for Mini SEO Report
+# Supabase Integration (Optional)
 
-This directory contains the Supabase database schema and setup instructions.
+This directory contains the Supabase database schema and setup instructions for future enhancement of the Mini SEO Report application.
+
+> **Note:** The current version of the application uses a simplified approach without Supabase dependency. The information below is provided for future reference when database integration is needed.
 
 ## Setting Up Supabase
+
+If you decide to integrate with Supabase in the future, follow these steps:
 
 1. Create a Supabase account at [supabase.com](https://supabase.com)
 2. Create a new project 
@@ -35,7 +39,7 @@ Stores SEO reports generated for leads:
 - `id` - Unique identifier (UUID)
 - `lead_id` - Reference to the lead who requested the report
 - `url` - Website URL that was analyzed
-- `scores` - JSON object containing Lighthouse scores
+- `scores` - JSON object containing scores
 - `recommendations` - Array of recommendations for improving SEO
 - `created_at` - Timestamp when the report was generated
 
@@ -49,4 +53,4 @@ The Supabase setup includes Row Level Security policies to ensure:
 
 ## Development Notes
 
-When testing locally, you can use placeholder values in your `.env.local` file, but for production, make sure to use your actual Supabase credentials. 
+This setup is optional for the current version. The application currently functions without database integration, generating reports on demand without persistent storage. If database functionality is needed in the future, these instructions and schema can be used to implement it. 
