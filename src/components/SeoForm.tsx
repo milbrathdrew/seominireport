@@ -20,7 +20,7 @@ const SeoForm: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitted: formIsSubmitted },
     reset,
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -29,6 +29,7 @@ const SeoForm: React.FC = () => {
       email: '',
       name: '',
     },
+    mode: 'onSubmit', // Only validate on submit
   });
 
   const onSubmit = async (data: FormValues) => {
@@ -110,7 +111,7 @@ const SeoForm: React.FC = () => {
           type="url"
           placeholder="https://yourwebsite.com"
           {...register('url')}
-          error={errors.url}
+          error={formIsSubmitted ? errors.url : undefined}
           disabled={formState.isSubmitting}
           autoFocus
         />
@@ -120,7 +121,7 @@ const SeoForm: React.FC = () => {
           type="email"
           placeholder="you@example.com"
           {...register('email')}
-          error={errors.email}
+          error={formIsSubmitted ? errors.email : undefined}
           disabled={formState.isSubmitting}
         />
 
@@ -129,7 +130,7 @@ const SeoForm: React.FC = () => {
           type="text"
           placeholder="John Doe"
           {...register('name')}
-          error={errors.name}
+          error={formIsSubmitted ? errors.name : undefined}
           disabled={formState.isSubmitting}
         />
 

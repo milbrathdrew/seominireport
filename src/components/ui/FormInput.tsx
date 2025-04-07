@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { FieldError } from 'react-hook-form';
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -7,12 +7,12 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: FieldError;
 }
 
-const FormInput: React.FC<FormInputProps> = ({
+const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
   label,
   name,
   error,
   ...props
-}) => {
+}, ref) => {
   return (
     <div className="w-full">
       <label 
@@ -30,6 +30,7 @@ const FormInput: React.FC<FormInputProps> = ({
             : 'border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
         }`}
         aria-invalid={error ? 'true' : 'false'}
+        ref={ref}
         {...props}
       />
       {error && (
@@ -39,6 +40,8 @@ const FormInput: React.FC<FormInputProps> = ({
       )}
     </div>
   );
-};
+});
+
+FormInput.displayName = 'FormInput';
 
 export default FormInput; 
