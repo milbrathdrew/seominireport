@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { storeLead, storeReport } from '@/lib/supabase';
 import { ReportData } from '@/types/form';
 
 export async function POST(request: Request) {
@@ -12,15 +11,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Store lead information
-    const lead = await storeLead({ name, email, url });
-    
-    if (!lead) {
-      return NextResponse.json({ error: 'Failed to store lead information' }, { status: 500 });
-    }
-
     try {
-      // 2. Generate SEO report (mock data for now)
+      // Generate SEO report (mock data for now)
       console.log(`Generating SEO report for ${url}...`);
       
       // Calculate basic scores based on the URL
@@ -69,23 +61,10 @@ export async function POST(request: Request) {
         recommendations: recommendations.slice(0, 10) // Top 10 recommendations
       };
 
-      // 3. Store report in database
-      const report = await storeReport({
-        lead_id: lead.id as string,
-        url,
-        scores: reportData.scores,
-        recommendations: reportData.recommendations
-      });
-
-      if (!report) {
-        return NextResponse.json({ error: 'Failed to store report data' }, { status: 500 });
-      }
-
-      // 4. Return success response with report data
+      // Return success response with report data
       return NextResponse.json({ 
         success: true, 
-        message: 'Report generated and stored successfully',
-        reportId: report.id,
+        message: 'Report generated successfully',
         report: reportData
       });
     } catch (analysisError) {
@@ -108,18 +87,9 @@ export async function POST(request: Request) {
         ]
       };
       
-      // Try to store the fallback report
-      const report = await storeReport({
-        lead_id: lead.id as string,
-        url,
-        scores: fallbackReport.scores,
-        recommendations: fallbackReport.recommendations
-      });
-      
       return NextResponse.json({ 
         success: true, 
         message: 'Basic report generated with limited analysis',
-        reportId: report?.id,
         report: fallbackReport,
         error: `Analysis error: ${analysisError instanceof Error ? analysisError.message : String(analysisError)}`
       });

@@ -40,6 +40,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export async function storeLead(leadData: Omit<Lead, 'id' | 'created_at'>): Promise<Lead | null> {
   try {
+    console.log('Storing lead data:', leadData);
+    
     const { data, error } = await supabase
       .from('leads')
       .insert([{ ...leadData, created_at: new Date().toISOString() }])
@@ -48,9 +50,11 @@ export async function storeLead(leadData: Omit<Lead, 'id' | 'created_at'>): Prom
 
     if (error) {
       console.error('Error storing lead:', error);
+      console.error('Error details:', error.details, error.hint, error.code);
       return null;
     }
 
+    console.log('Lead stored successfully:', data);
     return data;
   } catch (error) {
     console.error('Unexpected error storing lead:', error);
