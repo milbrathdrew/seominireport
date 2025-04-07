@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { storeLead, storeReport } from '@/lib/supabase';
+import { ReportData } from '@/types/form';
 
 export async function POST(request: Request) {
   try {
@@ -10,15 +12,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // For now, we'll just return a mock response
-    // In a real implementation, this would:
-    // 1. Store lead information in Supabase
-    // 2. Run Lighthouse analysis
-    // 3. Generate PDF report
-    // 4. Send email with report
-    // 5. Return success response
+    // 1. Store lead information
+    const lead = await storeLead({ name, email, url });
+    
+    if (!lead) {
+      return NextResponse.json({ error: 'Failed to store lead information' }, { status: 500 });
+    }
 
-    const mockReport = {
+    // 2. For now, we'll just use mock data for the report
+    // In a real implementation, this would run Lighthouse analysis
+    const mockReport: ReportData = {
       url,
       date: new Date().toISOString(),
       scores: {
@@ -35,12 +38,23 @@ export async function POST(request: Request) {
       ]
     };
 
-    // In production, you would save this to Supabase and send an email
+    // 3. Store report in database
+    const report = await storeReport({
+      lead_id: lead.id as string,
+      url,
+      scores: mockReport.scores,
+      recommendations: mockReport.recommendations
+    });
 
+    if (!report) {
+      return NextResponse.json({ error: 'Failed to store report data' }, { status: 500 });
+    }
+
+    // 4. Return success response with report data
     return NextResponse.json({ 
       success: true, 
-      message: 'Report generated successfully',
-      reportId: '123456',
+      message: 'Report generated and stored successfully',
+      reportId: report.id,
       report: mockReport
     });
     
