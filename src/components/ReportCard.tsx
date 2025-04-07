@@ -1,11 +1,12 @@
 import React from 'react';
 import { ReportData } from '@/types/form';
 
-interface ReportCardProps {
+type ReportCardProps = {
   report: ReportData;
-}
+  error?: string;
+};
 
-const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
+const ReportCard: React.FC<ReportCardProps> = ({ report, error }) => {
   const { url, date, scores, recommendations } = report;
   const formattedDate = new Date(date).toLocaleDateString();
 
@@ -15,6 +16,13 @@ const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
     return 'text-red-600';
   };
 
+  // Check if this is a fallback report (all scores are 50)
+  const isFallbackReport = 
+    scores.performance === 50 && 
+    scores.accessibility === 50 && 
+    scores.seo === 50 && 
+    scores.bestPractices === 50;
+
   return (
     <div className="bg-white rounded-xl shadow-xl p-8 animate-fade-in">
       <div className="text-center mb-6">
@@ -23,6 +31,14 @@ const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
           Analysis for <span className="font-medium text-primary-700">{url}</span>
         </p>
         <p className="text-sm text-gray-500 mt-1">Generated on {formattedDate}</p>
+        
+        {isFallbackReport && (
+          <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+            <p className="font-medium">Limited Analysis Available</p>
+            <p className="mt-1">We couldn't fully analyze your website. The results below are estimates.</p>
+            {error && <p className="mt-1 text-xs opacity-75">{error}</p>}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -60,6 +76,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
       </div>
     </div>
   );
-};
+}
 
 export default ReportCard; 

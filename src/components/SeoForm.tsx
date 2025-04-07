@@ -15,6 +15,7 @@ const SeoForm: React.FC = () => {
     isError: false,
   });
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | undefined>(undefined);
 
   const {
     register,
@@ -32,12 +33,14 @@ const SeoForm: React.FC = () => {
 
   const onSubmit = async (data: FormValues) => {
     setFormState({ ...formState, isSubmitting: true, isError: false });
+    setAnalysisError(undefined);
 
     try {
       const result = await generateReport(data);
 
       if (result.success && result.report) {
         setReportData(result.report);
+        setAnalysisError(result.error);
         setFormState({
           isSubmitting: false,
           isSubmitted: true,
@@ -74,7 +77,7 @@ const SeoForm: React.FC = () => {
   if (formState.isSubmitted && reportData) {
     return (
       <div className="space-y-6">
-        <ReportCard report={reportData} />
+        <ReportCard report={reportData} error={analysisError} />
         <div className="text-center">
           <Button
             variant="secondary"

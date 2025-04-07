@@ -25,7 +25,12 @@ export async function generateReport(data: FormValues): Promise<{
       throw new Error(result.error || 'Failed to generate report');
     }
 
-    return result;
+    // Pass through the error field if it exists (for analysis errors)
+    return {
+      ...result,
+      success: result.success || false,
+      message: result.message || '',
+    };
   } catch (error) {
     console.error('API Error:', error);
     return {

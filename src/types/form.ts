@@ -2,14 +2,13 @@ import { z } from 'zod';
 
 export const formSchema = z.object({
   url: z.string()
-    .url({ message: 'Please enter a valid URL including http:// or https://' })
-    .min(1, { message: 'URL is required' }),
+    .url('Please enter a valid URL')
+    .startsWith('http', 'URL must start with http:// or https://'),
   email: z.string()
-    .email({ message: 'Please enter a valid email address' })
-    .min(1, { message: 'Email is required' }),
+    .email('Please enter a valid email address'),
   name: z.string()
-    .min(2, { message: 'Name must be at least 2 characters' })
-    .max(50, { message: 'Name cannot exceed 50 characters' })
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name cannot exceed 100 characters')
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -31,4 +30,5 @@ export type ReportData = {
     bestPractices: number;
   };
   recommendations: string[];
+  analysisError?: string;
 }; 
