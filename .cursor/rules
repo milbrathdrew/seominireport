@@ -1,0 +1,68 @@
+---
+description: Minimalist SEO Report Generator project patterns and guidelines
+globs:
+alwaysApply: true
+---
+
+# Project Patterns & Intelligence
+
+## Architectural Patterns
+- Single page application with Next.js
+- Serverless API routes for backend functionality
+- Supabase for database and authentication (if added later)
+- Component-based UI structure with Tailwind CSS
+
+## Code Style
+- Use functional components with React hooks
+- Prefer named exports over default exports
+- Use TypeScript for type safety
+- Follow Airbnb ESLint style guide
+
+## File Structure
+- `/pages` - Next.js pages and API routes
+- `/components` - Reusable UI components
+- `/lib` - Utility functions and services
+- `/styles` - Global styles and Tailwind config
+- `/public` - Static assets
+- `/types` - TypeScript type definitions
+
+## Naming Conventions
+- PascalCase for component files and React components
+- camelCase for variables, functions, and non-component files
+- kebab-case for CSS classes and file paths
+- UPPER_SNAKE_CASE for constants
+
+## Component Structure
+- Group related components in subdirectories
+- Keep components focused on a single responsibility
+- Use composition over inheritance
+- Extract common functionality into hooks
+
+## State Management
+- Use React hooks for local state
+- Context API for shared state when needed
+- Avoid prop drilling by using context appropriately
+
+## API Patterns
+- RESTful API design for API routes
+- Consistent error handling and response formatting
+- Validate request data using schema validation
+- Handle async operations with try/catch and proper error responses
+
+## User Experience
+- Focus on minimalism and simplicity
+- "Lush" visual design with subtle animations
+- Clear loading states for async operations
+- Responsive design for all screen sizes
+- Form validation with clear error messages
+
+## SEO Report Generation
+- Prioritize speed over comprehensiveness
+- Focus on actionable insights over technical details
+- Use visual elements to communicate scores clearly
+- Include educational content to explain metrics
+
+## Memory Bank Management
+- Update activeContext.md and progress.md with each significant change
+- Keep documentation aligned with implementation
+- Document key decisions and their rationales 
