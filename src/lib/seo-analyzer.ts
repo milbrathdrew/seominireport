@@ -124,7 +124,6 @@ function calculateMetadataScore(
   hasCanonical: boolean
 ): number {
   let score = 0;
-  const total = 100;
   
   // Title checks (30 points)
   if (title) score += 10;
@@ -160,7 +159,6 @@ function calculateContentScore(
   imageCount: number
 ): number {
   let score = 0;
-  const total = 100;
   
   // Headings checks (40 points)
   if (hasH1) score += 15;
@@ -191,7 +189,6 @@ function calculateTechnicalScore(
   html: string
 ): number {
   let score = 0;
-  const total = 100;
   
   // Meta tags (30 points)
   if (hasMetaViewport) score += 10;
@@ -226,7 +223,6 @@ function calculateTechnicalScore(
  */
 function calculateAccessibilityScore($: cheerio.CheerioAPI): number {
   let score = 0;
-  const total = 100;
   
   // Alt text for images (20 points)
   const images = $('img');
