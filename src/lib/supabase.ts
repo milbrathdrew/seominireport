@@ -33,6 +33,10 @@ export type Report = {
   created_at?: string;
 };
 
+export type LeadWithReports = Lead & {
+  reports: Report[];
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
@@ -138,6 +142,84 @@ export async function getReportsByEmail(email: string): Promise<Report[] | null>
     return reports;
   } catch (error) {
     console.error('Unexpected error fetching reports by email:', error);
+    return null;
+  }
+}
+
+/**
+ * Get all leads with their associated reports
+ */
+export async function getAllLeadsWithReports(): Promise<LeadWithReports[] | null> {
+  try {
+    // First get all leads
+    const { data: leads, error: leadsError } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (leadsError) {
+      console.error('Error fetching leads:', leadsError);
+      return null;
+    }
+
+    // Now get reports for each lead
+    const leadsWithReports: LeadWithReports[] = [];
+    
+    for (const lead of leads) {
+      const { data: reports, error: reportsError } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('lead_id', lead.id)
+        .order('created_at', { ascending: false });
+        
+      if (reportsError) {
+        console.error(`Error fetching reports for lead ${lead.id}:`, reportsError);
+        // Continue with other leads even if one fails
+        leadsWithReports.push({ ...lead, reports: [] });
+      } else {
+        leadsWithReports.push({ ...lead, reports: reports || [] });
+      }
+    }
+    
+    return leadsWithReports;
+  } catch (error) {
+    console.error('Unexpected error fetching all leads with reports:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a specific lead with all associated reports
+ */
+export async function getLeadWithReports(leadId: string): Promise<LeadWithReports | null> {
+  try {
+    // Get the lead
+    const { data: lead, error: leadError } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('id', leadId)
+      .single();
+
+    if (leadError || !lead) {
+      console.error('Error fetching lead:', leadError);
+      return null;
+    }
+
+    // Get reports for this lead
+    const { data: reports, error: reportsError } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false });
+
+    if (reportsError) {
+      console.error('Error fetching reports for lead:', reportsError);
+      return { ...lead, reports: [] };
+    }
+
+    return { ...lead, reports: reports || [] };
+  } catch (error) {
+    console.error('Unexpected error fetching lead with reports:', error);
     return null;
   }
 } 

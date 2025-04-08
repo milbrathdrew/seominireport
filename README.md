@@ -1,36 +1,46 @@
 # Minimalist SEO Report Generator
 
-A single-page SEO report generator that helps website owners understand their SEO performance. Users enter their website URL, email, and name to receive a free SEO analysis report.
+A single-page SEO report generator where users enter their website URL, email, and name to receive a free SEO analysis. No login required, no complex dashboards - just instant value delivery with immediate UI feedback.
 
-## Features
+## Project Features
 
-- Modern, visually appealing landing page
-- Simple form with just 3 fields
-- URL-based SEO analysis with intelligent scoring
-- Instant report generation
-- Tailored recommendations based on URL patterns
-- Responsive design for mobile and desktop
+1. **Modern Landing Page**
+   - Clean, visually appealing "lush" design
+   - Simple form with 3 fields: Website URL, Email, Name
+   - Clear CTA button: "Generate your free SEO report now"
+   - Minimal explanatory text highlighting benefits
 
-## Tech Stack
+2. **Instant SEO Analysis**
+   - Run quick technical analysis when user submits form
+   - Show loading/processing indicator
+   - Display comprehensive results directly in the UI
+   - Provide visual score indicators and detailed recommendations
 
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API routes (serverless)
-- **Form Validation**: react-hook-form with zod
-- **Styling**: Tailwind CSS with custom components
+3. **Core SEO Analysis Components**
+   - Performance, SEO, Accessibility and Best Practices scores
+   - Basic URL structure analysis
+   - Mobile-friendliness indicators
+   - Visual breakdown of different analysis aspects
+   - Actionable recommendations with priority indicators
+
+4. **Lead Capture**
+   - Store submitted information in database
+   - Save analysis results for later reference
+   - Enable administrative review of submitted reports
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 16+
+- Node.js 18.x or higher
 - npm or yarn
-- Git
+- Supabase account (for database storage)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone [repository-url]
+   git clone https://github.com/yourusername/mini-seo-report.git
    cd mini-seo-report
    ```
 
@@ -39,64 +49,51 @@ A single-page SEO report generator that helps website owners understand their SE
    npm install
    ```
 
-3. Run the development server:
+3. Set up environment variables:
+   - Copy `.env.example` to `.env.local`
+   - Fill in your Supabase credentials
+
+4. Run the development server:
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Open http://localhost:3000 to see the application
 
-## Development
+## Project Structure
 
-### Branch Structure
+- `src/app/`: Next.js app directory with page routes and API endpoints
+- `src/components/`: React components
+- `src/lib/`: Utility functions and services
+- `src/types/`: TypeScript type definitions
+- `src/styles/`: Global styles
+- `public/`: Static assets
 
-We follow a GitFlow-inspired branching strategy:
+## Technology Stack
 
-- `main`: Production-ready code
-- `develop`: Integration branch
-- `feature/*`: For new features
-- `bugfix/*`: For bug fixes
-- `hotfix/*`: For critical production fixes
-
-See [branchingStrategy.md](./memory-bank/branchingStrategy.md) for detailed workflow.
-
-### Directory Structure
-
-- `/src/app`: Next.js app directory
-- `/src/components`: React components
-- `/src/lib`: Utility functions
-- `/src/styles`: Global styles
-- `/src/types`: TypeScript types
-- `/memory-bank`: Project documentation
-
-## Features Implemented
-
-- Form validation with error messages
-- Responsive UI with loading states
-- URL-based SEO analysis
-- Score calculation for performance, accessibility, SEO, and best practices
-- Dynamic recommendations based on URL patterns
-- Report display with visual score indicators
+- Next.js 14.1.0
+- React 18.2.0
+- TypeScript
+- Tailwind CSS
+- Supabase (for database)
+- React Hook Form with Zod validation
 
 ## Future Enhancements
 
 - PDF report generation
 - Email delivery of reports
-- More sophisticated SEO analysis
-- Dashboard for viewing past reports
-- Premium report options
+- Advanced content analysis
+- Historical tracking
+- Competitive analysis
 
-## Documentation
+## Contributing
 
-Project documentation is maintained in the `/memory-bank` directory:
-
-- `projectbrief.md`: Core concept and features
-- `productContext.md`: Why this project exists
-- `systemPatterns.md`: Architecture and design patterns
-- `techContext.md`: Technical details and constraints
-- `activeContext.md`: Current development focus
-- `progress.md`: Project status and roadmap
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-[MIT](LICENSE) 
+This project is licensed under the MIT License - see the LICENSE file for details. 

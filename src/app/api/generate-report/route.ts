@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
+import { storeLead, storeReport } from '@/lib/supabase';
+import { analyzeSeo, isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
 
 export async function POST(request: Request) {
   try {
@@ -11,60 +13,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Validate URL format
+    if (!isValidUrl(url)) {
+      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+    }
+
     try {
-      // Generate SEO report (mock data for now)
+      // Store lead data first
+      const lead = await storeLead({ name, email, url });
+      
+      if (!lead) {
+        return NextResponse.json({ error: 'Failed to store lead information' }, { status: 500 });
+      }
+      
+      // Generate SEO report using the client-compatible analyzer
       console.log(`Generating SEO report for ${url}...`);
       
-      // Calculate basic scores based on the URL
-      const urlObj = new URL(url);
-      const isDomain = urlObj.pathname === '/';
-      const hasWww = urlObj.hostname.startsWith('www.');
-      const isHttps = urlObj.protocol === 'https:';
+      const normalizedUrl = normalizeUrl(url);
+      const seoAnalysisResult = analyzeSeo(normalizedUrl);
       
-      // Simple scoring based on URL patterns
-      const seoScore = isHttps ? 90 : 70;
-      const performanceScore = hasWww ? 85 : 75;
-      const accessibilityScore = Math.floor(Math.random() * 20) + 75; // Random score between 75-95
-      const bestPracticesScore = isDomain ? 85 : 80;
-      
-      // Generate recommendations based on URL
-      const recommendations = [
-        "Add meta description to improve SEO score",
-        "Optimize images to improve performance",
-        "Fix heading hierarchy for better accessibility",
-        "Add alt attributes to images"
-      ];
-      
-      if (!isHttps) {
-        recommendations.push("Upgrade to HTTPS for better security and SEO");
-      }
-      
-      if (!hasWww) {
-        recommendations.push("Consider adding www subdomain for consistency");
-      }
-      
-      if (!isDomain) {
-        recommendations.push("Include breadcrumbs for better navigation");
-        recommendations.push("Ensure proper canonical URLs");
-      }
-      
-      // Create report data
+      // Map the SEO analysis results to our report format
       const reportData: ReportData = {
-        url,
+        url: normalizedUrl,
         date: new Date().toISOString(),
         scores: {
-          performance: performanceScore,
-          accessibility: accessibilityScore,
-          seo: seoScore,
-          bestPractices: bestPracticesScore
+          seo: seoAnalysisResult.scores.metaScore,
+          performance: seoAnalysisResult.scores.technicalScore,
+          accessibility: 70, // Default score as we can't measure accessibility from URL alone
+          bestPractices: seoAnalysisResult.scores.contentScore
         },
-        recommendations: recommendations.slice(0, 10) // Top 10 recommendations
+        recommendations: seoAnalysisResult.recommendations,
+        // Additional data from the analysis
+        analysisDetails: {
+          technical: seoAnalysisResult.technicalAnalysis,
+          overallScore: seoAnalysisResult.scores.overallScore
+        }
       };
 
+      // Store report in the database
+      const report = await storeReport({
+        lead_id: lead.id!,
+        url: normalizedUrl,
+        scores: reportData.scores,
+        recommendations: reportData.recommendations
+      });
+
+      if (!report) {
+        console.error('Failed to store report in database');
+        // Continue anyway to return report to user
+      }
+      
       // Return success response with report data
       return NextResponse.json({ 
         success: true, 
-        message: 'Report generated successfully',
+        message: 'Report generated and stored successfully',
         report: reportData
       });
     } catch (analysisError) {
@@ -86,6 +88,19 @@ export async function POST(request: Request) {
           "Make sure your website allows robots to crawl it."
         ]
       };
+      
+      // Try to store lead data even if analysis fails
+      const lead = await storeLead({ name, email, url });
+      
+      if (lead) {
+        // Store the fallback report
+        await storeReport({
+          lead_id: lead.id!,
+          url,
+          scores: fallbackReport.scores,
+          recommendations: fallbackReport.recommendations
+        });
+      }
       
       return NextResponse.json({ 
         success: true, 

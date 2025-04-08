@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SeoAnalysisResult } from '@/lib/client-seo-analyzer';
 
 export const formSchema = z.object({
   url: z.string()
@@ -31,4 +32,8 @@ export type ReportData = {
   };
   recommendations: string[];
   analysisError?: string;
+  analysisDetails?: {
+    technical: SeoAnalysisResult['technicalAnalysis'];
+    overallScore: number;
+  };
 }; 
