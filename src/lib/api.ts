@@ -11,13 +11,27 @@ export async function generateReport(data: FormValues): Promise<{
   error?: string;
 }> {
   try {
-    const response = await fetch('/api/generate-report', {
+    // First attempt to use the full endpoint that stores data
+    let response = await fetch('/api/generate-report', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
+
+    // If there's a database error, fall back to the analyze-only endpoint
+    if (!response.ok && response.status === 500) {
+      console.warn('Database storage failed, falling back to analysis-only mode');
+      
+      response = await fetch('/api/analyze-only', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    }
 
     const result = await response.json();
 
