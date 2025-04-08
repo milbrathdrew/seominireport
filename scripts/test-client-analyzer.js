@@ -1,5 +1,6 @@
 // Test script for client-compatible SEO analyzer
-const { analyzeSeo } = require('../src/lib/client-seo-analyzer');
+const path = require('path');
+const { analyzeSeo } = require(path.join(__dirname, '../src/lib/client-seo-analyzer'));
 
 // Sample URLs to test
 const urls = [

@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
-import { storeLeadAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(request: Request) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ 
+      success: false, 
+      message: 'This endpoint is not available in production'
+    }, { status: 404 });
+  }
+
   try {
     const testData = {
       name: 'Test User',
@@ -9,27 +17,38 @@ export async function GET(request: Request) {
       url: 'https://example.com'
     };
 
-    // Try to insert a test lead using the admin client
-    const lead = await storeLeadAdmin(testData);
+    // Log only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Testing database connection...');
+    }
+    
+    // Try using the admin client directly
+    const { data, error } = await supabaseAdmin
+      .from('leads')
+      .insert([{ ...testData, created_at: new Date().toISOString() }])
+      .select()
+      .single();
 
-    if (!lead) {
+    if (error) {
+      // Log full error details server-side
+      console.error('Database error:', error);
+      
+      // Return sanitized error to client
       return NextResponse.json({ 
         success: false, 
-        message: 'Failed to store test lead',
+        message: 'Database operation failed'
       }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Test lead stored successfully',
-      data: lead
+      message: 'Test successful - database connection working'
     });
   } catch (error) {
     console.error('Test DB error:', error);
     return NextResponse.json({ 
       success: false, 
-      message: 'Error testing database connection',
-      error: error instanceof Error ? error.message : String(error)
+      message: 'An error occurred while testing the database connection'
     }, { status: 500 });
   }
 } 

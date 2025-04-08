@@ -86,6 +86,35 @@ A single-page SEO report generator where users enter their website URL, email, a
 - Historical tracking
 - Competitive analysis
 
+## Recent Updates
+
+### Database Schema Updates
+We've enhanced the database schema to properly store SEO analysis data:
+- Added `priority_fixes` column to the reports table for better tracking of high-impact recommendations
+- Added additional JSON fields (`technical_details`, `action_items`, `comparison_data`) to support comprehensive reporting
+- Fixed type definitions to match between client and server code
+
+### Action Plan Improvements
+- Created a structured admin action plan page that categorizes SEO recommendations
+- Added implementation timeline divided into phases (Quick Wins, Strategic Improvements, Long-term Projects)
+- Enhanced filtering and sorting capabilities for actionable items
+
+### Error Handling
+- Improved error handling in the API routes with proper fallback reports
+- Added better logging for debugging issues
+- Fixed non-null assertion errors in components
+
+## Coming Soon: Enhanced SEO Analysis
+We're working on implementing real website analysis with the following improvements:
+
+1. **Server-side Web Crawler**: Replace placeholder analysis with actual page content analysis
+2. **Metadata Analysis**: Evaluate real page titles, meta descriptions, and other metadata
+3. **Content Structure Analysis**: Analyze heading structure (H1-H6), images, and content quality
+4. **Accessibility Testing**: Perform basic accessibility checks for better scoring
+5. **Mobile Responsiveness**: Check if websites are mobile-friendly
+
+These improvements will provide distinct, accurate scores between different websites instead of relying on basic URL structure analysis.
+
 ## Contributing
 
 1. Fork the repository

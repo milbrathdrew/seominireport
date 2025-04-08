@@ -1,30 +1,38 @@
 import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
 import { analyzeSeo, isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
+import { validateEnvironmentVariables } from '@/lib/validate-env';
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
-    const { url, email, name } = data;
-
-    // Validate input
+    // First validate environment variables
+    validateEnvironmentVariables();
+    
+    const { url } = await request.json();
+    
     if (!url) {
-      return NextResponse.json({ error: 'Missing URL' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        message: 'URL is required' 
+      }, { status: 400 });
     }
-
-    // Validate URL format
+    
     if (!isValidUrl(url)) {
-      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        message: 'Invalid URL format' 
+      }, { status: 400 });
     }
-
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Generating SEO analysis for: ${url}`);
+    }
+    
     try {
-      // Generate SEO report using the client-compatible analyzer
-      console.log(`Generating SEO report for ${url}...`);
-      
       const normalizedUrl = normalizeUrl(url);
       const seoAnalysisResult = analyzeSeo(normalizedUrl);
       
-      // Map the SEO analysis results to our report format
+      // Format the report data consistently with other routes
       const reportData: ReportData = {
         url: normalizedUrl,
         date: new Date().toISOString(),
@@ -42,16 +50,71 @@ export async function POST(request: Request) {
         }
       };
       
-      // Return success response with report data
+      // Add priority information to recommendations
+      const enhancedReportData = {
+        ...reportData,
+        actionableItems: seoAnalysisResult.recommendations.map((recommendation, index) => {
+          // Determine category based on recommendation content
+          let category = 'general';
+          if (recommendation.toLowerCase().includes('title tag')) category = 'meta';
+          else if (recommendation.toLowerCase().includes('description')) category = 'meta';
+          else if (recommendation.toLowerCase().includes('heading')) category = 'content';
+          else if (recommendation.toLowerCase().includes('h1') || recommendation.toLowerCase().includes('h2')) category = 'content';
+          else if (recommendation.toLowerCase().includes('image')) category = 'media';
+          else if (recommendation.toLowerCase().includes('mobile')) category = 'technical';
+          else if (recommendation.toLowerCase().includes('load')) category = 'performance';
+          else if (recommendation.toLowerCase().includes('link')) category = 'links';
+          else if (recommendation.toLowerCase().includes('www')) category = 'technical';
+          else if (recommendation.toLowerCase().includes('keyword')) category = 'keywords';
+          
+          // Determine priority based on recommendation position and content
+          let priority = index < 3 ? 'high' : index < 6 ? 'medium' : 'low';
+          
+          // Certain types of recommendations have intrinsic priority
+          if (recommendation.toLowerCase().includes('https') || 
+              recommendation.toLowerCase().includes('mobile') ||
+              recommendation.toLowerCase().includes('title tag')) {
+            priority = 'high';
+          }
+          
+          // Estimate effort required
+          let effort = 'medium';
+          if (recommendation.toLowerCase().includes('title') || 
+              recommendation.toLowerCase().includes('description') ||
+              recommendation.toLowerCase().includes('alt text')) {
+            effort = 'low';
+          } else if (recommendation.toLowerCase().includes('redesign') ||
+                    recommendation.toLowerCase().includes('restructure')) {
+            effort = 'high';
+          }
+          
+          return {
+            title: recommendation.split('.')[0] + '.',  // First sentence as title
+            description: recommendation,
+            category,
+            priority,
+            effort,
+            impact: priority === 'high' ? 'high' : priority === 'medium' ? 'medium' : 'low'
+          };
+        }),
+        priorityFixes: seoAnalysisResult.recommendations
+          .slice(0, 3)
+          .map((recommendation, index) => ({
+            title: recommendation.split('.')[0] + '.',
+            description: recommendation,
+            impact: index === 0 ? 'high' : 'medium',
+            effort: 'medium'
+          }))
+      };
+      
       return NextResponse.json({ 
-        success: true, 
-        message: 'Report generated successfully',
-        report: reportData
+        success: true,
+        report: enhancedReportData
       });
     } catch (analysisError) {
-      console.error('SEO analysis error:', analysisError);
+      console.error(`Error analyzing URL ${url}:`, analysisError);
       
-      // If analysis fails, return a simplified report with basic information
+      // Provide a fallback report with basic information
       const fallbackReport: ReportData = {
         url,
         date: new Date().toISOString(),
@@ -68,15 +131,31 @@ export async function POST(request: Request) {
         ]
       };
       
+      // Add actionable items to fallback report
+      const enhancedFallbackReport = {
+        ...fallbackReport,
+        actionableItems: fallbackReport.recommendations.map((recommendation, index) => ({
+          title: recommendation.split('.')[0] + '.',
+          description: recommendation,
+          category: 'general',
+          priority: index === 0 ? 'high' : 'medium',
+          effort: 'medium',
+          impact: index === 0 ? 'high' : 'medium'
+        }))
+      };
+      
       return NextResponse.json({ 
-        success: true, 
+        success: true,
         message: 'Basic report generated with limited analysis',
-        report: fallbackReport,
-        error: `Analysis error: ${analysisError instanceof Error ? analysisError.message : String(analysisError)}`
+        report: enhancedFallbackReport
       });
     }
   } catch (error) {
-    console.error('Error generating report:', error);
-    return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 });
+    console.error('Error in analyze-only endpoint:', error);
+    
+    return NextResponse.json({
+      success: false,
+      message: 'Failed to analyze URL'
+    }, { status: 500 });
   }
 } 

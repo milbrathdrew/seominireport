@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { SeoAnalysisResult } from '@/lib/client-seo-analyzer';
 
 export const formSchema = z.object({
@@ -21,6 +21,15 @@ export type FormState = {
   errorMessage?: string;
 };
 
+export type SeoRecommendation = {
+  title: string;
+  description: string;
+  category: string;
+  priority: 'high' | 'medium' | 'low';
+  effort: 'high' | 'medium' | 'low';
+  impact: 'high' | 'medium' | 'low';
+};
+
 export type ReportData = {
   url: string;
   date: string;
@@ -33,7 +42,22 @@ export type ReportData = {
   recommendations: string[];
   analysisError?: string;
   analysisDetails?: {
-    technical: SeoAnalysisResult['technicalAnalysis'];
+    technical: {
+      httpsProtocol: boolean;
+      domainHasWww: boolean;
+      domainStructure: string;
+      pathDepth: number;
+      hasQueryParams: boolean;
+      hasFragment: boolean;
+      [key: string]: any;
+    };
     overallScore: number;
   };
+  actionableItems?: SeoRecommendation[];
+  priorityFixes?: Array<{
+    title: string;
+    description: string;
+    impact: string;
+    effort: string;
+  }>;
 }; 

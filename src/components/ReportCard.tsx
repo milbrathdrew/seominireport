@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ReportData } from '@/types/form';
 import SeoResultsDisplay from './SeoResultsDisplay';
+import ActionableItems from './ActionableItems';
 
 type ReportCardProps = {
   report: ReportData;
@@ -9,6 +10,7 @@ type ReportCardProps = {
 
 const ReportCard: React.FC<ReportCardProps> = ({ report, error }) => {
   const [showDetailed, setShowDetailed] = useState(false);
+  const [showActionable, setShowActionable] = useState(false);
   const { url, date } = report;
   const formattedDate = new Date(date).toLocaleDateString();
 
@@ -18,6 +20,9 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, error }) => {
     report.scores.accessibility === 50 && 
     report.scores.seo === 50 && 
     report.scores.bestPractices === 50;
+    
+  // Check if actionable items are available
+  const hasActionableItems = report.actionableItems && report.actionableItems.length > 0;
 
   // Simple summary view for initial display
   const SimpleSummary = () => (
@@ -76,7 +81,10 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, error }) => {
         )}
       </div>
 
-      {showDetailed ? (
+      {showActionable && hasActionableItems ? (
+        // Show actionable recommendations
+        <ActionableItems items={report.actionableItems || []} />
+      ) : showDetailed ? (
         // Show the detailed analysis view
         <SeoResultsDisplay report={report} />
       ) : (
@@ -84,14 +92,30 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, error }) => {
         <SimpleSummary />
       )}
 
-      <div className="mt-8 pt-6 border-t border-gray-200">
+      <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
         <button 
           type="button"
-          onClick={() => setShowDetailed(!showDetailed)}
-          className="w-full px-4 py-3 bg-primary-100 text-primary-700 rounded-lg font-medium hover:bg-primary-200 transition"
+          onClick={() => {
+            setShowDetailed(!showDetailed);
+            setShowActionable(false);
+          }}
+          className="w-full sm:flex-1 px-4 py-3 bg-primary-100 text-primary-700 rounded-lg font-medium hover:bg-primary-200 transition"
         >
           {showDetailed ? 'Show Simple Summary' : 'View Detailed Analysis'}
         </button>
+        
+        {hasActionableItems && (
+          <button 
+            type="button"
+            onClick={() => {
+              setShowActionable(!showActionable);
+              if (!showActionable) setShowDetailed(false);
+            }}
+            className="w-full sm:flex-1 px-4 py-3 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200 transition"
+          >
+            {showActionable ? 'Hide Action Plan' : 'View Actionable Recommendations'}
+          </button>
+        )}
       </div>
     </div>
   );
