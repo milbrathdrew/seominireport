@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
-import { storeLead, storeReport } from '@/lib/supabase';
+import { storeLeadAdmin, storeReportAdmin } from '@/lib/supabase-admin';
 import { analyzeSeo, isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
 
 export async function POST(request: Request) {
@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     }
 
     try {
-      // Store lead data first
-      const lead = await storeLead({ name, email, url });
+      // Store lead data first using admin client to bypass RLS
+      const lead = await storeLeadAdmin({ name, email, url });
       
       if (!lead) {
         return NextResponse.json({ error: 'Failed to store lead information' }, { status: 500 });
@@ -50,9 +50,9 @@ export async function POST(request: Request) {
         }
       };
 
-      // Store report in the database
-      const report = await storeReport({
-        lead_id: lead.id!,
+      // Store report in the database using admin client to bypass RLS
+      const report = await storeReportAdmin({
+        lead_id: lead.id,
         url: normalizedUrl,
         scores: reportData.scores,
         recommendations: reportData.recommendations
@@ -89,13 +89,13 @@ export async function POST(request: Request) {
         ]
       };
       
-      // Try to store lead data even if analysis fails
-      const lead = await storeLead({ name, email, url });
+      // Try to store lead data even if analysis fails using admin client
+      const lead = await storeLeadAdmin({ name, email, url });
       
       if (lead) {
-        // Store the fallback report
-        await storeReport({
-          lead_id: lead.id!,
+        // Store the fallback report using admin client
+        await storeReportAdmin({
+          lead_id: lead.id,
           url,
           scores: fallbackReport.scores,
           recommendations: fallbackReport.recommendations
