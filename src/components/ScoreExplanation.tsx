@@ -63,17 +63,9 @@ const scoreCategories: ScoreCategory[] = [
 
 export default function ScoreExplanation() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
 
   const toggleCategory = (name: string) => {
     setActiveCategory(activeCategory === name ? null : name);
-  };
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically handle the subscription
-    alert(`Thank you for subscribing with ${email}! We'll send you our SEO scoring guide.`);
-    setEmail('');
   };
 
   return (
@@ -85,7 +77,7 @@ export default function ScoreExplanation() {
         </p>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {scoreCategories.map((category) => (
             <div 
@@ -119,7 +111,7 @@ export default function ScoreExplanation() {
                     </ul>
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-xs text-gray-500 italic">
-                        Click on any metric to see detailed scoring criteria
+                        Click any category above to view its scoring details
                       </p>
                     </div>
                   </div>
@@ -129,40 +121,8 @@ export default function ScoreExplanation() {
           ))}
         </div>
       </div>
-
-      <div className="bg-gradient-to-r from-blue-50 to-primary-50 rounded-lg p-6 border border-primary-100">
-        <div className="md:flex justify-between items-center">
-          <div className="md:w-2/3">
-            <h3 className="text-lg font-bold text-primary-900">
-              Want a detailed breakdown of our scoring methodology?
-            </h3>
-            <p className="mt-2 text-gray-700">
-              Get our comprehensive SEO scoring guide delivered to your inbox. Learn exactly how we evaluate your website and get tips to improve your scores.
-            </p>
-          </div>
-          
-          <div className="mt-4 md:mt-0 md:w-1/3">
-            <form onSubmit={handleSubscribe} className="flex flex-col space-y-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
-                className="px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                required
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-              >
-                Get Free SEO Scoring Guide
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
       
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="text-center text-sm text-gray-500">
         <p>
           Our scoring system is continuously improved based on the latest SEO best practices.
           <br />
