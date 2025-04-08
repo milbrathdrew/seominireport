@@ -16,6 +16,7 @@ const SeoForm: React.FC = () => {
   });
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [analysisError, setAnalysisError] = useState<string | undefined>(undefined);
+  const [useServerAnalysis, setUseServerAnalysis] = useState(true);
 
   const {
     register,
@@ -37,7 +38,10 @@ const SeoForm: React.FC = () => {
     setAnalysisError(undefined);
 
     try {
-      const result = await generateReport(data);
+      const result = await generateReport({
+        ...data,
+        useServerAnalysis
+      });
 
       if (result.success && result.report) {
         setReportData(result.report);
@@ -134,14 +138,30 @@ const SeoForm: React.FC = () => {
           disabled={formState.isSubmitting}
         />
 
-        <Button
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="useServerAnalysis"
+            checked={useServerAnalysis}
+            onChange={(e) => setUseServerAnalysis(e.target.checked)}
+            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          />
+          <label htmlFor="useServerAnalysis" className="ml-2 block text-sm text-gray-700">
+            Use enhanced analysis (more accurate but may take longer)
+          </label>
+        </div>
+
+        <button
           type="submit"
-          isLoading={formState.isSubmitting}
-          fullWidth
-          size="lg"
+          disabled={formState.isSubmitting}
+          className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-70"
         >
-          Generate Your Free SEO Report Now
-        </Button>
+          {formState.isSubmitting 
+            ? useServerAnalysis 
+              ? 'Analyzing your website (this may take up to 30 seconds)...' 
+              : 'Analyzing...' 
+            : 'Generate Report'}
+        </button>
       </form>
     </div>
   );

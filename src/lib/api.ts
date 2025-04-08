@@ -11,8 +11,37 @@ export async function generateReport(data: FormValues): Promise<{
   error?: string;
 }> {
   try {
-    // First attempt to use the full endpoint that stores data
-    let response = await fetch('/api/generate-report', {
+    // Check if server analysis is requested (default is true if not specified)
+    const useServerAnalysis = data.useServerAnalysis !== false;
+    
+    let response;
+    
+    // First try to use server-side analysis if requested
+    if (useServerAnalysis) {
+      console.log('Using server-side analysis for more accurate results');
+      response = await fetch('/api/server-analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      // If successful, return the result
+      if (response.ok) {
+        const result = await response.json();
+        return {
+          ...result,
+          success: result.success || false,
+          message: result.message || '',
+        };
+      }
+      
+      console.warn('Server-side analysis failed, falling back to database storage mode');
+    }
+    
+    // Try the database-storing endpoint
+    response = await fetch('/api/generate-report', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
