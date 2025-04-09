@@ -9,24 +9,31 @@ All notable changes to the Mini SEO Report project will be documented in this fi
 - Basic accessibility testing
 - Mobile-friendliness checks
 
+## [1.3.0] - 2025-04-09
+### Removed
+- Action items functionality
+- ActionableItems component
+- Action plan admin page
+- Related database tables and columns (`action_items` table, `action_items`, `actionable_items`, and `priority_fixes` columns)
+
+### Improved
+- Simplified database schema
+- Enhanced error handling with environment variable validation
+- Streamlined code with focus on core functionality
+- Updated documentation to reflect current application state
+
 ## [1.2.0] - 2025-04-08
 ### Added
-- New admin action plan page with implementation timeline
-- ActionableItems component with sorting and filtering capabilities
-- Database migration for priority_fixes column and additional JSON fields
 - Enhanced error handling with fallback reports
+- Improved logging for better debugging
+- API response structure
+- Structured approach to SEO recommendations
 
 ### Fixed
 - Database schema alignment with code expectations
 - ReportCard component non-null assertion errors
 - Error handling in API routes
 - Type definitions between client and server code
-
-### Improved
-- Documentation with recent updates and upcoming features
-- Logging for better debugging
-- API response structure
-- Structured approach to SEO recommendations
 
 ## [1.1.0] - 2025-04-01
 ### Added

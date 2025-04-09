@@ -39,21 +39,6 @@ export type Report = {
     hasFragment: boolean;
     [key: string]: any;
   };
-  action_items?: {
-    [category: string]: {
-      items: Array<{
-        title: string;
-        description: string;
-        priority: number;
-      }>;
-    };
-  };
-  priority_fixes?: Array<{
-    title: string;
-    description: string;
-    impact: string;
-    effort: string;
-  }>;
   comparison_data?: {
     industry_average?: {
       seo: number;
@@ -74,27 +59,8 @@ export type Report = {
   created_at?: string;
 };
 
-export type ActionItem = {
-  id?: string;
-  report_id: string;
-  category: string;
-  title: string;
-  description: string;
-  priority: number;
-  status: 'pending' | 'in_progress' | 'completed' | 'deferred';
-  effort_level: 'low' | 'medium' | 'high';
-  expected_impact: 'low' | 'medium' | 'high';
-  implementation_notes?: string;
-  created_at?: string;
-  completed_at?: string;
-};
-
 export type LeadWithReports = Lead & {
   reports: Report[];
-};
-
-export type ReportWithActionItems = Report & {
-  action_items: ActionItem[];
 };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -131,6 +97,19 @@ export async function storeLead(leadData: Omit<Lead, 'id' | 'created_at'>): Prom
  */
 export async function storeReport(reportData: Omit<Report, 'id' | 'created_at'>): Promise<Report | null> {
   try {
+    // Validate required fields
+    if (!reportData.lead_id) {
+      console.error('Error storing report: lead_id is required');
+      return null;
+    }
+    
+    if (!reportData.url) {
+      console.error('Error storing report: url is required');
+      return null;
+    }
+    
+    console.log(`Storing report for URL: ${reportData.url}, Lead ID: ${reportData.lead_id}`);
+    
     const { data, error } = await supabase
       .from('reports')
       .insert([{ ...reportData, created_at: new Date().toISOString() }])
@@ -138,182 +117,41 @@ export async function storeReport(reportData: Omit<Report, 'id' | 'created_at'>)
       .single();
 
     if (error) {
-      console.error('Error storing report:', error);
+      console.error('Error storing report:', JSON.stringify(error, null, 2));
+      console.error('Error details:', error.details, error.hint, error.code);
       return null;
     }
 
+    console.log('Report stored successfully with ID:', data.id);
     return data;
   } catch (error) {
-    console.error('Unexpected error storing report:', error);
+    console.error('Unexpected error storing report:', 
+      error instanceof Error ? error.message : JSON.stringify(error, null, 2));
     return null;
   }
 }
 
 /**
  * Create action items from SEO recommendations
+ * Note: This function is intentionally disabled
  */
 export async function createActionItemsFromRecommendations(
   reportId: string, 
   recommendations: string[]
-): Promise<ActionItem[] | null> {
-  try {
-    // Map recommendations to action items with categories and priorities
-    const actionItems = recommendations.map((recommendation, index) => {
-      // Determine category based on recommendation content
-      let category = 'general';
-      if (recommendation.toLowerCase().includes('title tag')) category = 'meta';
-      else if (recommendation.toLowerCase().includes('description')) category = 'meta';
-      else if (recommendation.toLowerCase().includes('heading')) category = 'content';
-      else if (recommendation.toLowerCase().includes('h1') || recommendation.toLowerCase().includes('h2')) category = 'content';
-      else if (recommendation.toLowerCase().includes('image')) category = 'media';
-      else if (recommendation.toLowerCase().includes('mobile')) category = 'technical';
-      else if (recommendation.toLowerCase().includes('load')) category = 'performance';
-      else if (recommendation.toLowerCase().includes('link')) category = 'links';
-      else if (recommendation.toLowerCase().includes('www')) category = 'technical';
-      else if (recommendation.toLowerCase().includes('keyword')) category = 'keywords';
-      
-      // Determine priority based on recommendation position and content
-      // First 3 items are considered higher priority
-      let priority = index < 3 ? 1 : index < 6 ? 2 : 3;
-      
-      // Certain types of recommendations have intrinsic priority
-      if (recommendation.toLowerCase().includes('https') || 
-          recommendation.toLowerCase().includes('mobile') ||
-          recommendation.toLowerCase().includes('title tag')) {
-        priority = 1; // High priority
-      }
-      
-      // Create the action item
-      return {
-        report_id: reportId,
-        category,
-        title: recommendation.split('.')[0] + '.',  // First sentence as title
-        description: recommendation,
-        priority,
-        status: 'pending',
-        effort_level: 'medium',
-        expected_impact: priority === 1 ? 'high' : priority === 2 ? 'medium' : 'low',
-        created_at: new Date().toISOString()
-      };
-    });
-    
-    // Insert all action items
-    const { data, error } = await supabase
-      .from('action_items')
-      .insert(actionItems)
-      .select();
-      
-    if (error) {
-      console.error('Error creating action items:', error);
-      return null;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Unexpected error creating action items:', error);
-    return null;
-  }
+): Promise<null> {
+  // Return null - action items functionality is disabled
+  return null;
 }
 
 /**
- * Get action items for a specific report
+ * Get a report by ID with action items
+ * Note: Action items functionality has been removed, returns just the report
  */
-export async function getActionItemsByReportId(reportId: string): Promise<ActionItem[] | null> {
+export async function getReportWithActionItems(id: string): Promise<Report | null> {
   try {
-    const { data, error } = await supabase
-      .from('action_items')
-      .select('*')
-      .eq('report_id', reportId)
-      .order('priority', { ascending: true })
-      .order('created_at', { ascending: true });
-      
-    if (error) {
-      console.error('Error fetching action items:', error);
-      return null;
-    }
-    
-    return data;
+    return await getReportById(id);
   } catch (error) {
-    console.error('Unexpected error fetching action items:', error);
-    return null;
-  }
-}
-
-/**
- * Update an action item status
- */
-export async function updateActionItemStatus(
-  id: string, 
-  status: ActionItem['status'], 
-  implementation_notes?: string
-): Promise<ActionItem | null> {
-  try {
-    const updates: any = { status };
-    
-    // If status is completed, set completed_at date
-    if (status === 'completed') {
-      updates.completed_at = new Date().toISOString();
-    } else {
-      // If status is not completed, ensure completed_at is null
-      updates.completed_at = null;
-    }
-    
-    // Add implementation notes if provided
-    if (implementation_notes) {
-      updates.implementation_notes = implementation_notes;
-    }
-    
-    const { data, error } = await supabase
-      .from('action_items')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error updating action item:', error);
-      return null;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Unexpected error updating action item:', error);
-    return null;
-  }
-}
-
-/**
- * Get a report by ID with its action items
- */
-export async function getReportWithActionItems(id: string): Promise<ReportWithActionItems | null> {
-  try {
-    // Get the report
-    const { data: report, error: reportError } = await supabase
-      .from('reports')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (reportError || !report) {
-      console.error('Error fetching report:', reportError);
-      return null;
-    }
-
-    // Get action items for this report
-    const { data: actionItems, error: actionItemsError } = await supabase
-      .from('action_items')
-      .select('*')
-      .eq('report_id', id)
-      .order('priority', { ascending: true });
-
-    if (actionItemsError) {
-      console.error('Error fetching action items:', actionItemsError);
-      return { ...report, action_items: [] };
-    }
-
-    return { ...report, action_items: actionItems || [] };
-  } catch (error) {
-    console.error('Unexpected error fetching report with action items:', error);
+    console.error('Unexpected error fetching report:', error);
     return null;
   }
 }

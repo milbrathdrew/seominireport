@@ -51,6 +51,19 @@ export default function AdminDashboard() {
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">SEO Report Dashboard</h1>
       
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <span className="text-gray-600">Total leads: {leadsWithReports.length}</span>
+          <span className="mx-2">•</span>
+          <span className="text-gray-600">Total reports: {leadsWithReports.reduce((acc, lead) => acc + lead.reports.length, 0)}</span>
+        </div>
+        <div>
+          <Link href="/admin/setup-guide">
+            <Button variant="outline" size="sm">Database Setup Guide</Button>
+          </Link>
+        </div>
+      </div>
+      
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Lead List */}
         <div className="w-full lg:w-1/3">

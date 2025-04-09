@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
-import { analyzeSeo, isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
-import { storeLead, storeReport, createActionItemsFromRecommendations } from '@/lib/supabase';
+import { storeLead, storeReport } from '@/lib/supabase';
+import { isValidUrl, normalizeUrl, analyzeSeo } from '@/lib/client-seo-analyzer';
 import { validateEnvironmentVariables } from '@/lib/validate-env';
 
 export async function POST(request: Request) {
@@ -120,11 +120,7 @@ export async function POST(request: Request) {
       } else {
         console.log('Successfully stored report with ID:', storeResult.id);
         
-        // Create structured action items from recommendations
-        await createActionItemsFromRecommendations(
-          storeResult.id as string,
-          reportData.recommendations
-        );
+        // Action items creation has been disabled
       }
       
       // Return success response with report data
@@ -179,10 +175,10 @@ export async function POST(request: Request) {
         console.log('Successfully stored fallback report with ID:', fallbackStoreResult.id);
         
         // Create basic action items for the fallback report
-        await createActionItemsFromRecommendations(
-          fallbackStoreResult.id as string,
-          fallbackReport.recommendations
-        );
+        // await createActionItemsFromRecommendations(
+        //   fallbackStoreResult.id as string,
+        //   fallbackReport.recommendations
+        // );
       } else {
         console.error('Failed to store fallback report in database');
       }

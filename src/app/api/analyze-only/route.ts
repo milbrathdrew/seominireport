@@ -50,66 +50,9 @@ export async function POST(request: Request) {
         }
       };
       
-      // Add priority information to recommendations
-      const enhancedReportData = {
-        ...reportData,
-        actionableItems: seoAnalysisResult.recommendations.map((recommendation, index) => {
-          // Determine category based on recommendation content
-          let category = 'general';
-          if (recommendation.toLowerCase().includes('title tag')) category = 'meta';
-          else if (recommendation.toLowerCase().includes('description')) category = 'meta';
-          else if (recommendation.toLowerCase().includes('heading')) category = 'content';
-          else if (recommendation.toLowerCase().includes('h1') || recommendation.toLowerCase().includes('h2')) category = 'content';
-          else if (recommendation.toLowerCase().includes('image')) category = 'media';
-          else if (recommendation.toLowerCase().includes('mobile')) category = 'technical';
-          else if (recommendation.toLowerCase().includes('load')) category = 'performance';
-          else if (recommendation.toLowerCase().includes('link')) category = 'links';
-          else if (recommendation.toLowerCase().includes('www')) category = 'technical';
-          else if (recommendation.toLowerCase().includes('keyword')) category = 'keywords';
-          
-          // Determine priority based on recommendation position and content
-          let priority = index < 3 ? 'high' : index < 6 ? 'medium' : 'low';
-          
-          // Certain types of recommendations have intrinsic priority
-          if (recommendation.toLowerCase().includes('https') || 
-              recommendation.toLowerCase().includes('mobile') ||
-              recommendation.toLowerCase().includes('title tag')) {
-            priority = 'high';
-          }
-          
-          // Estimate effort required
-          let effort = 'medium';
-          if (recommendation.toLowerCase().includes('title') || 
-              recommendation.toLowerCase().includes('description') ||
-              recommendation.toLowerCase().includes('alt text')) {
-            effort = 'low';
-          } else if (recommendation.toLowerCase().includes('redesign') ||
-                    recommendation.toLowerCase().includes('restructure')) {
-            effort = 'high';
-          }
-          
-          return {
-            title: recommendation.split('.')[0] + '.',  // First sentence as title
-            description: recommendation,
-            category,
-            priority,
-            effort,
-            impact: priority === 'high' ? 'high' : priority === 'medium' ? 'medium' : 'low'
-          };
-        }),
-        priorityFixes: seoAnalysisResult.recommendations
-          .slice(0, 3)
-          .map((recommendation, index) => ({
-            title: recommendation.split('.')[0] + '.',
-            description: recommendation,
-            impact: index === 0 ? 'high' : 'medium',
-            effort: 'medium'
-          }))
-      };
-      
       return NextResponse.json({ 
         success: true,
-        report: enhancedReportData
+        report: reportData
       });
     } catch (analysisError) {
       console.error(`Error analyzing URL ${url}:`, analysisError);
@@ -131,23 +74,10 @@ export async function POST(request: Request) {
         ]
       };
       
-      // Add actionable items to fallback report
-      const enhancedFallbackReport = {
-        ...fallbackReport,
-        actionableItems: fallbackReport.recommendations.map((recommendation, index) => ({
-          title: recommendation.split('.')[0] + '.',
-          description: recommendation,
-          category: 'general',
-          priority: index === 0 ? 'high' : 'medium',
-          effort: 'medium',
-          impact: index === 0 ? 'high' : 'medium'
-        }))
-      };
-      
       return NextResponse.json({ 
         success: true,
         message: 'Basic report generated with limited analysis',
-        report: enhancedFallbackReport
+        report: fallbackReport
       });
     }
   } catch (error) {

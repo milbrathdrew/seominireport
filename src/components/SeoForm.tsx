@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { formSchema, FormValues, FormState, ReportData } from '@/types/form';
+import { seoFormSchema, ReportData } from '@/types/form';
 import FormInput from './ui/FormInput';
 import Button from './ui/Button';
 import Alert from './ui/Alert';
 import ReportCard from './ReportCard';
 import { generateReport } from '@/lib/api';
+
+// Define types needed for the form
+type FormValues = {
+  url: string;
+  email: string;
+  name: string;
+  useServerAnalysis?: boolean;
+};
+
+type FormState = {
+  isSubmitting: boolean;
+  isSubmitted: boolean;
+  isError: boolean;
+  errorMessage?: string;
+};
 
 const SeoForm: React.FC = () => {
   const [formState, setFormState] = useState<FormState>({
@@ -24,7 +39,7 @@ const SeoForm: React.FC = () => {
     formState: { errors, isSubmitted: formIsSubmitted },
     reset,
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(seoFormSchema),
     defaultValues: {
       url: '',
       email: '',

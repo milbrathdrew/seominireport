@@ -3,6 +3,7 @@ import { ReportData } from '@/types/form';
 import { isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
 import { analyzeSeoServer } from '@/lib/server-seo-analyzer';
 import { validateEnvironmentVariables } from '@/lib/validate-env';
+import { storeLead, storeReport } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
     validateEnvironmentVariables();
 
     const data = await request.json();
-    const { url } = data;
+    const { url, email, name } = data;
 
     // Validate input
     if (!url) {
@@ -26,6 +27,28 @@ export async function POST(request: Request) {
         success: false,
         message: 'Invalid URL format' 
       }, { status: 400 });
+    }
+
+    // Additional validation for database storage
+    if (!email) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'Email is required to save results' 
+      }, { status: 400 });
+    }
+
+    if (!name) {
+      return NextResponse.json({ 
+        success: false,
+        message: 'Name is required to save results' 
+      }, { status: 400 });
+    }
+
+    // Store lead data first
+    const leadResult = await storeLead({ name, email, url });
+    if (!leadResult || !leadResult.id) {
+      console.error('Failed to store lead information');
+      // Continue with analysis but note the database storage failure
     }
 
     try {
@@ -64,105 +87,41 @@ export async function POST(request: Request) {
           overallScore: seoAnalysisResult.scores.overall,
           metadata: seoAnalysisResult.metadata,
           content: seoAnalysisResult.content
-        },
-        // Map actionable items from recommendations
-        actionableItems: seoAnalysisResult.recommendations.map((recommendation, index) => {
-          // Determine category based on recommendation content
-          let category = 'general';
-          if (recommendation.toLowerCase().includes('title tag') || recommendation.toLowerCase().includes('meta description')) {
-            category = 'meta';
-          } else if (recommendation.toLowerCase().includes('heading') || recommendation.toLowerCase().includes('content')) {
-            category = 'content';
-          } else if (recommendation.toLowerCase().includes('image')) {
-            category = 'media';
-          } else if (recommendation.toLowerCase().includes('mobile') || recommendation.toLowerCase().includes('viewport')) {
-            category = 'mobile';
-          } else if (recommendation.toLowerCase().includes('load') || recommendation.toLowerCase().includes('speed')) {
-            category = 'performance';
-          } else if (recommendation.toLowerCase().includes('link') || recommendation.toLowerCase().includes('internal')) {
-            category = 'links';
-          } else if (recommendation.toLowerCase().includes('https') || recommendation.toLowerCase().includes('canonical')) {
-            category = 'technical';
-          } else if (recommendation.toLowerCase().includes('alt text') || recommendation.toLowerCase().includes('contrast')) {
-            category = 'accessibility';
-          }
-          
-          // Determine priority based on impact
-          let priority: 'high' | 'medium' | 'low' = 'medium';
-          
-          // High priority items
-          if (
-            recommendation.toLowerCase().includes('https') || 
-            recommendation.toLowerCase().includes('h1') ||
-            recommendation.toLowerCase().includes('title tag') ||
-            recommendation.toLowerCase().includes('meta description') ||
-            recommendation.toLowerCase().includes('mobile') ||
-            index < 3
-          ) {
-            priority = 'high';
-          } 
-          // Low priority items
-          else if (
-            recommendation.toLowerCase().includes('open graph') ||
-            recommendation.toLowerCase().includes('schema') ||
-            index > 8
-          ) {
-            priority = 'low';
-          }
-          
-          // Determine effort level
-          let effort: 'high' | 'medium' | 'low' = 'medium';
-          
-          // Low effort items
-          if (
-            recommendation.toLowerCase().includes('title tag') ||
-            recommendation.toLowerCase().includes('meta description') ||
-            recommendation.toLowerCase().includes('alt text') ||
-            recommendation.toLowerCase().includes('canonical')
-          ) {
-            effort = 'low';
-          }
-          // High effort items
-          else if (
-            recommendation.toLowerCase().includes('restructure') ||
-            recommendation.toLowerCase().includes('fix mobile') ||
-            recommendation.toLowerCase().includes('improve page load') ||
-            recommendation.toLowerCase().includes('https')
-          ) {
-            effort = 'high';
-          }
-          
-          // Determine impact
-          let impact: 'high' | 'medium' | 'low' = priority;
-          
-          return {
-            title: recommendation.split('.')[0] + '.',
-            description: recommendation,
-            category,
-            priority,
-            effort,
-            impact
-          };
-        }),
-        // Create priority fixes for the most impactful items
-        priorityFixes: seoAnalysisResult.recommendations
-          .slice(0, 5)
-          .map((recommendation, index) => ({
-            title: recommendation.split('.')[0] + '.',
-            description: recommendation,
-            impact: index < 2 ? 'high' : 'medium',
-            effort: recommendation.toLowerCase().includes('title') || recommendation.toLowerCase().includes('meta') 
-              ? 'low' 
-              : recommendation.toLowerCase().includes('https') || recommendation.toLowerCase().includes('speed')
-              ? 'high'
-              : 'medium'
-          }))
+        }
       };
       
-      // Return success response with report data
+      // Store the report in the database if lead storage was successful
+      let reportId: string | undefined;
+      
+      if (leadResult && leadResult.id) {
+        // Prepare database-friendly report structure
+        const databaseReport = {
+          lead_id: leadResult.id,
+          url: normalizedUrl,
+          scores: reportData.scores,
+          recommendations: reportData.recommendations,
+          technical_details: reportData.analysisDetails?.technical || {},
+        };
+        
+        // Store the report
+        console.log('Storing report in database...');
+        const storeResult = await storeReport(databaseReport as any);
+        
+        if (storeResult) {
+          console.log('Report stored successfully with ID:', storeResult.id);
+          reportId = storeResult.id;
+          
+          // Action items creation has been disabled
+        } else {
+          console.error('Failed to store report in database');
+        }
+      }
+      
+      // Return success response with report data and ID if available
       return NextResponse.json({ 
         success: true, 
         message: 'Report generated successfully using server-side analysis',
+        reportId,
         report: reportData
       });
     } catch (analysisError) {
@@ -188,9 +147,29 @@ export async function POST(request: Request) {
         analysisError: analysisError instanceof Error ? analysisError.message : String(analysisError)
       };
       
+      // Try to store the fallback report if lead storage was successful
+      let fallbackReportId: string | undefined;
+      
+      if (leadResult && leadResult.id) {
+        const fallbackDatabaseReport = {
+          lead_id: leadResult.id,
+          url,
+          scores: fallbackReport.scores,
+          recommendations: fallbackReport.recommendations
+        };
+        
+        const fallbackStoreResult = await storeReport(fallbackDatabaseReport as any);
+        
+        if (fallbackStoreResult) {
+          console.log('Fallback report stored with ID:', fallbackStoreResult.id);
+          fallbackReportId = fallbackStoreResult.id;
+        }
+      }
+      
       return NextResponse.json({ 
         success: true,
         message: 'Basic report generated with limited analysis due to technical issues',
+        reportId: fallbackReportId,
         report: fallbackReport
       });
     }

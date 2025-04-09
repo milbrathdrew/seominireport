@@ -1,4 +1,12 @@
-import { FormValues, ReportData } from "@/types/form";
+import { ReportData } from "@/types/form";
+
+// Define the FormValues type locally for this file
+type FormValues = {
+  url: string;
+  email: string;
+  name: string;
+  useServerAnalysis?: boolean;
+};
 
 /**
  * Generate SEO report for the specified URL

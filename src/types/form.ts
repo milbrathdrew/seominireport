@@ -1,35 +1,24 @@
-import * as z from 'zod';
-import { SeoAnalysisResult } from '@/lib/client-seo-analyzer';
+import { z } from 'zod';
 
-export const formSchema = z.object({
-  url: z.string()
-    .url('Please enter a valid URL')
-    .startsWith('http', 'URL must start with http:// or https://'),
-  email: z.string()
-    .email('Please enter a valid email address'),
-  name: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name cannot exceed 100 characters'),
-  useServerAnalysis: z.boolean().optional().default(true)
+// URL validation schema for form
+export const urlSchema = z.object({
+  url: z.string().url('Please enter a valid URL').min(5, 'URL is too short')
 });
 
-export type FormValues = z.infer<typeof formSchema>;
+// Email validation schema for lead information
+export const leadSchema = z.object({
+  name: z.string().min(2, 'Name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  url: z.string().url('Please enter a valid URL')
+});
 
-export type FormState = {
-  isSubmitting: boolean;
-  isSubmitted: boolean;
-  isError: boolean;
-  errorMessage?: string;
-};
-
-export type SeoRecommendation = {
-  title: string;
-  description: string;
-  category: string;
-  priority: 'high' | 'medium' | 'low';
-  effort: 'high' | 'medium' | 'low';
-  impact: 'high' | 'medium' | 'low';
-};
+// Combined schema for the SEO form
+export const seoFormSchema = z.object({
+  url: z.string().url('Please enter a valid URL').min(5, 'URL is too short'),
+  name: z.string().min(2, 'Name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  useServerAnalysis: z.boolean().optional().default(false)
+});
 
 export type ReportData = {
   url: string;
@@ -87,11 +76,4 @@ export type ReportData = {
       };
     };
   };
-  actionableItems?: SeoRecommendation[];
-  priorityFixes?: Array<{
-    title: string;
-    description: string;
-    impact: string;
-    effort: string;
-  }>;
 }; 
