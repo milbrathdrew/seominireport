@@ -1,14 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { getEnvVariable } from './validateEnvironment';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    'Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
-  );
-}
+const supabaseUrl = getEnvVariable('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = getEnvVariable('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
 // Define Supabase database types
 export type Lead = {

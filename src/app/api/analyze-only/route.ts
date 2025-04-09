@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
 import { analyzeSeo, isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
-import { validateEnvironmentVariables } from '@/lib/validate-env';
+import { validateEnvironmentVariables } from '@/lib/validateEnvironment';
 
 export async function POST(request: Request) {
   try {

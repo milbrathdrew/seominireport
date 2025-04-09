@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { ReportData } from '@/types/form';
 import { isValidUrl, normalizeUrl } from '@/lib/client-seo-analyzer';
 import { analyzeSeoServer } from '@/lib/server-seo-analyzer';
-import { validateEnvironmentVariables } from '@/lib/validate-env';
+import { validateEnvironmentVariables } from '@/lib/validateEnvironment';
 import { storeLead, storeReport } from '@/lib/supabase';
 
 export async function POST(request: Request) {
