@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin, validateServiceRoleKey } from '@/lib/supabase-admin';
 
 export async function GET(request: Request) {
   // Only allow in development environment
@@ -11,6 +11,16 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Try to validate service role key, but only in development
+    try {
+      validateServiceRoleKey();
+    } catch (error) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Missing SUPABASE_SERVICE_ROLE_KEY. This endpoint is for development testing only.'
+      }, { status: 403 });
+    }
+
     const testData = {
       name: 'Test User',
       email: 'test@example.com',

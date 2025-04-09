@@ -1,7 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
+import { getEnvVariable } from './validateEnvironment';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+// Get Supabase URL (required for all environments)
+const supabaseUrl = getEnvVariable('NEXT_PUBLIC_SUPABASE_URL');
+
+// For service role key, allow it to be optional in certain contexts
+let supabaseServiceKey = '';
+try {
+  supabaseServiceKey = getEnvVariable('SUPABASE_SERVICE_ROLE_KEY');
+} catch (error) {
+  // In development, just warn about missing service key
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('Missing SUPABASE_SERVICE_ROLE_KEY - admin operations will fail');
+  }
+}
 
 // Only log in development environment
 if (process.env.NODE_ENV === 'development') {
@@ -16,20 +28,17 @@ if (process.env.NODE_ENV === 'development') {
   ));
 }
 
-// Validate environment setup
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn(
-    'Missing Supabase admin credentials. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local'
-  );
-}
-
-// Throw error in production if service key is missing or invalid
-if (process.env.NODE_ENV === 'production') {
+/**
+ * Validates if the service role key is available
+ * @throws Error if the service role key is not available
+ */
+export function validateServiceRoleKey(): void {
   if (!supabaseServiceKey) {
-    throw new Error('Service role key is required in production environment');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin operations');
   }
+  
   if (!supabaseServiceKey.startsWith('eyJhbGc')) {
-    throw new Error('Invalid service role key format in production environment');
+    throw new Error('Invalid SUPABASE_SERVICE_ROLE_KEY format');
   }
 }
 
@@ -55,6 +64,9 @@ export async function storeLeadAdmin(leadData: {
   url: string;
 }): Promise<any | null> {
   try {
+    // Validate service role key before proceeding
+    validateServiceRoleKey();
+    
     // Only log minimal information in development
     if (process.env.NODE_ENV === 'development') {
       console.log('Storing lead data (admin): email domain', leadData.email.split('@')[1]);
@@ -97,6 +109,9 @@ export async function storeReportAdmin(reportData: {
   recommendations: string[];
 }): Promise<any | null> {
   try {
+    // Validate service role key before proceeding
+    validateServiceRoleKey();
+    
     const { data, error } = await supabaseAdmin
       .from('reports')
       .insert([{ ...reportData, created_at: new Date().toISOString() }])
